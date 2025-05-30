@@ -458,9 +458,9 @@ def get_dict_value(path: list[str], data: dict[str, Any]) -> Result[Any, str]:
 
 
 def fetch_category_offers(
-    client: Client, category_id: int
+    client: Client, category_id: int, offset: int, limit: int
 ) -> Result[CategoryOfferListings, str]:
-    query, variables = gpl_vars_get_offer_listings(0, 1, category_id)
+    query, variables = gpl_vars_get_offer_listings(offset, limit, category_id)
     res = execute_query(client, query, variables)
     match res:
         case Err() as err:
