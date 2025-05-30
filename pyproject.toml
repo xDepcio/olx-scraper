@@ -1,0 +1,19 @@
+[project]
+name = "olx-scraper"
+version = "0.1.0"
+description = "olx scraper"
+authors = [
+    {name = "Aleksander Drwal", email = "olek.drwal@gmail.com"},
+]
+dependencies = []
+requires-python = ">=3.13"
+readme = "README.md"
+license = {text = "MIT"}
+
+[build-system]
+requires = ["pdm-backend"]
+build-backend = "pdm.backend"
+
+
+[tool.pdm]
+distribution = true
