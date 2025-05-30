@@ -2,13 +2,11 @@
 name = "olx-scraper"
 version = "0.1.0"
 description = "olx scraper"
-authors = [
-    {name = "Aleksander Drwal", email = "olek.drwal@gmail.com"},
-]
-dependencies = []
+authors = [{ name = "Aleksander Drwal", email = "olek.drwal@gmail.com" }]
+dependencies = ["gql>=3.5.3"]
 requires-python = ">=3.13"
 readme = "README.md"
-license = {text = "MIT"}
+license = { text = "MIT" }
 
 [build-system]
 requires = ["pdm-backend"]
