@@ -300,7 +300,7 @@ query ListingSearchQuery(
 
 class CategoryOfferListings(BaseModel):
 
-    class ClientCompatibleListings(BaseModel):
+    class ListingSuccess(BaseModel):
         class Data(BaseModel):
             class Location(BaseModel):
                 class City(BaseModel):
@@ -390,9 +390,22 @@ class CategoryOfferListings(BaseModel):
             external_url: Optional[str] = None
             valid_to_time: str
 
+        typename: Literal["ListingSuccess"] = Field(alias="__typename")
         data: list[Data]
 
-    clientCompatibleListings: ClientCompatibleListings
+    class ListingError(BaseModel):
+        class Error(BaseModel):
+            code: int
+            detail: str
+            status: int
+            title: str
+
+        error: Error
+        typename: Literal["ListingError"] = Field(alias="__typename")
+
+    clientCompatibleListings: Union[ListingSuccess, ListingError] = Field(
+        discriminator="typename",
+    )
 
 
 def gpl_vars_get_offer_listings(

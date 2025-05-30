@@ -9,5 +9,5 @@ GRAPHQL_ENDPOINT = "https://www.olx.pl/apigateway/graphql"
 transport = AIOHTTPTransport(url=GRAPHQL_ENDPOINT)
 client = Client(transport=transport, fetch_schema_from_transport=False)
 
-res = fetch_category_offers(client, 443)
+res = fetch_category_offers(client, 442)
 pprint.pprint(res)
