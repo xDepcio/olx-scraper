@@ -1,38 +1,13 @@
-from dataclasses import dataclass
-from typing import Union
+import pprint
+from gql.transport.aiohttp import AIOHTTPTransport
+from gql import Client
+
+from olx_scraper.endpoints.category_offer_listings import fetch_category_offers
 
 
-@dataclass
-class Ok[T]:
-    value: T
+GRAPHQL_ENDPOINT = "https://www.olx.pl/apigateway/graphql"
+transport = AIOHTTPTransport(url=GRAPHQL_ENDPOINT)
+client = Client(transport=transport, fetch_schema_from_transport=False)
 
-
-@dataclass
-class Err[E]:
-    error: E
-
-
-type Result[T, E] = Union[Ok[T], Err[E]]
-
-
-def fetch_category_offers(category: str, page: int = 1) -> Result[int, str]:
-    """
-    Fetch offers from a specific category and page.
-
-    Args:
-        category (str): The category to fetch offers from.
-        page (int): The page number to fetch offers from.
-
-    Returns:
-        Result[list[dict], str]: A list of offers or an error message.
-    """
-    # Placeholder for actual implementation
-    return Ok(42)
-
-
-d = fetch_category_offers("electronics", 1)
-match d:
-    case Err() as err:
-        pass
-    case Ok() as res:
-        okres = res.value
+res = fetch_category_offers(client, 443)
+pprint.pprint(res)
