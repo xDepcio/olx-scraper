@@ -298,21 +298,6 @@ query ListingSearchQuery(
 """
 
 
-def get_offer_listings(
-    offset: int, limit: int, category_id: int
-) -> tuple[str, dict[str, Any]]:
-    return (
-        OFFER_LISTINGS,
-        {
-            "searchParameters": [
-                {"key": "category_id", "value": str(category_id)},
-                {"key": "offset", "value": str(offset)},
-                {"key": "limit", "value": str(limit)},
-            ]
-        },
-    )
-
-
 class CategoryOfferListings(BaseModel):
 
     class ClientCompatibleListings(BaseModel):
@@ -410,6 +395,21 @@ class CategoryOfferListings(BaseModel):
     clientCompatibleListings: ClientCompatibleListings
 
 
+def gpl_vars_get_offer_listings(
+    offset: int, limit: int, category_id: int
+) -> tuple[str, dict[str, Any]]:
+    return (
+        OFFER_LISTINGS,
+        {
+            "searchParameters": [
+                {"key": "category_id", "value": str(category_id)},
+                {"key": "offset", "value": str(offset)},
+                {"key": "limit", "value": str(limit)},
+            ]
+        },
+    )
+
+
 def execute_query(
     client: Client, query: str, variables: dict[str, Any]
 ) -> Result[dict[str, Any], str]:
@@ -447,7 +447,7 @@ def get_dict_value(path: list[str], data: dict[str, Any]) -> Result[Any, str]:
 def fetch_category_offers(
     client: Client, category_id: int
 ) -> Result[CategoryOfferListings, str]:
-    query, variables = get_offer_listings(0, 1, category_id)
+    query, variables = gpl_vars_get_offer_listings(0, 1, category_id)
     res = execute_query(client, query, variables)
     match res:
         case Err() as err:
