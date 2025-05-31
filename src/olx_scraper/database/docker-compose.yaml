@@ -1,0 +1,11 @@
+services:
+  database:
+    image: "postgres:16"
+    container_name: olx-scraper-db
+    environment:
+      POSTGRES_USER: "admin"
+      POSTGRES_PASSWORD: "admin"
+      POSTGRES_DB: "olx_scraper"
+    ports:
+      - "5432:5432"
+    restart: unless-stopped
