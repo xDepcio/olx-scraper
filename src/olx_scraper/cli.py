@@ -34,7 +34,7 @@ def category(id: Annotated[int, typer.Argument(help="Category ID to scrape")]):
     res = exec_query(db_pool, "SELECT 1", [])
     print(res)
     load_schema(db_pool, "./database/schema.sql", [])
-    res = exec_query(db_pool, "select * from listing;", [])
+    res = exec_query(db_pool, "select * from listings;", [])
     print(res)
     return
     scrape_res = scrape_category(client, id)
