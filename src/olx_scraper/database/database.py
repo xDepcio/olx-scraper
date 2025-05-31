@@ -28,21 +28,24 @@ def get_cursor_from_connection(conn: connection) -> Generator[Result[cursor, str
 
 @contextmanager
 def get_cursor_from_pool(
-    pool: AbstractConnectionPool,
+        pool: AbstractConnectionPool,
+        commit: bool = False
 ) -> Generator[Result[cursor, str]]:
     with get_connection(pool) as conn_result:
         match conn_result:
             case Ok(conn):
                 with get_cursor_from_connection(conn) as cursor:
                     yield cursor
+                if commit:
+                    conn.commit()
             case Err(error):
                 yield Err(f"Error getting connection: {error}")
 
 
 def exec_query(
-    pool: AbstractConnectionPool, query: str, params: list[Any]
+        pool: AbstractConnectionPool, query: str, params: list[Any], commit=False
 ) -> Result[list[Any], str]:
-    with get_cursor_from_pool(pool) as cursor:
+    with get_cursor_from_pool(pool, commit=commit) as cursor:
         match cursor:
             case Ok(c):
                 try:
@@ -52,3 +55,10 @@ def exec_query(
                     return Err(f"Error executing query: {e}")
             case Err() as err:
                 return err
+            case _:
+                return Err(f"Unknown cursor object: {cursor}")
+
+
+def load_schema(pool, path, params):
+    script = open(path, "r").read()
+    return exec_query(pool, script, params, commit=True)

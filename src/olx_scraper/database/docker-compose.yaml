@@ -5,7 +5,7 @@ services:
     environment:
       POSTGRES_USER: "admin"
       POSTGRES_PASSWORD: "admin"
-      POSTGRES_DB: "olx-scraper"
+      POSTGRES_DB: "olx_scraper"
     ports:
       - "5432:5432"
     restart: unless-stopped

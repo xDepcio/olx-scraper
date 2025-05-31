@@ -4,7 +4,7 @@ from gql.transport.aiohttp import AIOHTTPTransport
 from gql import Client
 
 from psycopg2.pool import ThreadedConnectionPool
-from olx_scraper.database import exec_query
+from olx_scraper.database.database import exec_query, load_schema
 from olx_scraper.scrapers.scrape_by_category import scrape_category
 
 GRAPHQL_ENDPOINT = "https://www.olx.pl/apigateway/graphql"
@@ -25,13 +25,16 @@ def category(id: Annotated[int, typer.Argument(help="Category ID to scrape")]):
     db_pool = ThreadedConnectionPool(
         minconn=1,
         maxconn=10,
-        user="postgres",
-        password="postgres",
+        user="admin",
+        password="admin",
         host="localhost",
         port="5432",
-        database="postgres",
+        database="olx_scraper",
     )
     res = exec_query(db_pool, "SELECT 1", [])
+    print(res)
+    load_schema(db_pool, "./database/schema.sql", [])
+    res = exec_query(db_pool, "select * from listing;", [])
     print(res)
     return
     scrape_res = scrape_category(client, id)
