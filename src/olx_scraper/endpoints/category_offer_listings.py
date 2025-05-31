@@ -1,4 +1,3 @@
-import pprint
 from typing import Any, Literal, Optional, Union
 from olx_scraper.result import Err, Ok, Result
 from gql import Client, gql
@@ -408,7 +407,7 @@ class CategoryOfferListings(BaseModel):
     )
 
 
-def gpl_vars_get_offer_listings(
+def gql_vars_get_offer_listings(
     offset: int, limit: int, category_id: int
 ) -> tuple[str, dict[str, Any]]:
     return (
@@ -423,7 +422,7 @@ def gpl_vars_get_offer_listings(
     )
 
 
-def execute_query(
+def execute_gql_query(
     client: Client, query: str, variables: dict[str, Any]
 ) -> Result[dict[str, Any], str]:
     try:
@@ -460,8 +459,8 @@ def get_dict_value(path: list[str], data: dict[str, Any]) -> Result[Any, str]:
 def fetch_category_offers(
     client: Client, category_id: int, offset: int, limit: int
 ) -> Result[CategoryOfferListings, str]:
-    query, variables = gpl_vars_get_offer_listings(offset, limit, category_id)
-    res = execute_query(client, query, variables)
+    query, variables = gql_vars_get_offer_listings(offset, limit, category_id)
+    res = execute_gql_query(client, query, variables)
     match res:
         case Err() as err:
             return Err(err.error)
