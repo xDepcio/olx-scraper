@@ -1,10 +1,15 @@
+import os
+import sys
 from typing import Annotated
 import typer
 from gql.transport.aiohttp import AIOHTTPTransport
 from gql import Client
 
 from psycopg2.pool import ThreadedConnectionPool
+from olx_scraper.database.crud import insert_offer_into_db
 from olx_scraper.database.database import exec_query, load_schema
+from olx_scraper.endpoints.category_offer_listings import CategoryOfferListings
+from olx_scraper.result import Err, Ok
 from olx_scraper.scrapers.scrape_by_category import scrape_category
 
 GRAPHQL_ENDPOINT = "https://www.olx.pl/apigateway/graphql"
@@ -31,13 +36,16 @@ def category(id: Annotated[int, typer.Argument(help="Category ID to scrape")]):
         port="5432",
         database="olx_scraper",
     )
-    res = exec_query(db_pool, "SELECT 1", [])
-    print(res)
-    load_schema(db_pool, "./database/schema.sql", [])
-    res = exec_query(db_pool, "select * from listings;", [])
-    print(res)
-    return
-    scrape_res = scrape_category(client, id)
+
+    def on_listings_fetched(listings: list[CategoryOfferListings.ListingSuccess.Data]):
+        for listing in listings:
+            match insert_offer_into_db(listing, db_pool):
+                case Ok() as ok:
+                    print("ok:", ok)
+                case Err() as err:
+                    print("err:", err)
+
+    scrape_res = scrape_category(client, id, on_listings_fetched)
     print(scrape_res)
 
 

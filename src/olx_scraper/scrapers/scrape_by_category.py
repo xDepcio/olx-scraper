@@ -21,7 +21,6 @@ def scrape_category(
     limit = 50
     while not finish:
         res = fetch_category_offers(client, category_id, offset, limit)
-        print(res)
         match res:
             case Ok(
                 value=CategoryOfferListings(
