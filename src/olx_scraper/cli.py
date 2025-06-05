@@ -6,6 +6,7 @@ from gql import Client
 from psycopg2.pool import ThreadedConnectionPool
 from olx_scraper.database.database import exec_query, load_schema
 from olx_scraper.scrapers.scrape_by_category import scrape_category
+from olx_scraper.scrapers.scrape_categories import add_categories
 
 GRAPHQL_ENDPOINT = "https://www.olx.pl/apigateway/graphql"
 app = typer.Typer()
@@ -39,6 +40,21 @@ def category(id: Annotated[int, typer.Argument(help="Category ID to scrape")]):
     return
     scrape_res = scrape_category(client, id)
     print(scrape_res)
+
+
+@app.command()
+def update_categories(limit: Annotated[int, typer.Argument(help="Number of most popular categories to scrape and save")]):
+    db_pool = ThreadedConnectionPool(
+        minconn=1,
+        maxconn=10,
+        user="admin",
+        password="admin",
+        host="localhost",
+        port="5432",
+        database="olx_scraper",
+    )
+    load_schema(db_pool, "./database/schema.sql", [])
+    add_categories(db_pool, 50)
 
 
 if __name__ == "__main__":
