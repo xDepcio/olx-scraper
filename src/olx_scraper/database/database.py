@@ -59,6 +59,6 @@ def exec_query(
                 return Err(f"Unknown cursor object: {cursor}")
 
 
-def load_schema(pool, path, params):
+def load_schema(pool: AbstractConnectionPool, path: str, params: list[Any]):
     script = open(path, "r").read()
     return exec_query(pool, script, params, commit=True)
