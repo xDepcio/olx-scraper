@@ -113,7 +113,7 @@ def complete_categories(ids: list[int]) -> Result[list[Category], str]:
                 print(name, parent_id)
                 category = Category(
                     id=cat_id,
-                    type="goods",
+                    type="goods", # not included in breadcrumbs or main category
                     name=name,
                     parent=parent_id,
                 )
