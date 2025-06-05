@@ -1,5 +1,3 @@
-import os
-import sys
 from typing import Annotated
 import typer
 from gql.transport.aiohttp import AIOHTTPTransport
@@ -7,7 +5,6 @@ from gql import Client
 
 from psycopg2.pool import ThreadedConnectionPool
 from olx_scraper.database.crud import insert_offer_into_db
-from olx_scraper.database.database import exec_query, load_schema
 from olx_scraper.endpoints.category_offer_listings import CategoryOfferListings
 from olx_scraper.result import Err, Ok
 from olx_scraper.scrapers.scrape_by_category import scrape_category
@@ -51,7 +48,11 @@ def category(id: Annotated[int, typer.Argument(help="Category ID to scrape")]):
 
 
 @app.command()
-def update_categories(limit: Annotated[int, typer.Argument(help="Number of most popular categories to scrape and save")]):
+def update_categories(
+    limit: Annotated[
+        int, typer.Argument(help="Number of most popular categories to scrape and save")
+    ],
+):
     db_pool = ThreadedConnectionPool(
         minconn=1,
         maxconn=10,
@@ -61,7 +62,6 @@ def update_categories(limit: Annotated[int, typer.Argument(help="Number of most 
         port="5432",
         database="olx_scraper",
     )
-    load_schema(db_pool, "./database/schema.sql", [])
     add_categories(db_pool, 50)
 
 
