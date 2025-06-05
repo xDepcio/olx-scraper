@@ -44,13 +44,13 @@ def fetch_raw_category_ids() -> Result[list[int], str]:
     return Err("raw_categories is not a Result")
 
 
-def fetch_olx_categories() -> Result[list[Category], str]:
+def fetch_olx_categories(limit: int) -> Result[list[Category], str]:
     category_id_result = fetch_raw_category_ids()
     match category_id_result:
         case Err() as err:
             return Err(err.error)
         case Ok() as ok:
-            return complete_categories(ok.value)
+            return complete_categories(ok.value, limit)
     return Err([])
 
 
@@ -77,6 +77,7 @@ def extract_category_name(breadcrumbs: list[dict[str, Any]]) -> Result[str, str]
             return Err(err.error)
     return Err("Returned category name was not wrapped in Result")
 
+
 def extract_category_parent_id(breadcrumbs: list[dict[str, Any]]) -> Result[Optional[str], str]:
     if len(breadcrumbs) <= 2:
         return Ok(None)
@@ -89,9 +90,11 @@ def extract_category_parent_id(breadcrumbs: list[dict[str, Any]]) -> Result[Opti
     return Err("Returned category id was not wrapped in Result")
 
 
-def complete_categories(ids: list[int]) -> Result[list[Category], str]:
+def complete_categories(ids: list[int], limit: int) -> Result[list[Category], str]:
     result: list[Category] = []
-    for cat_id in ids[:15]:
+    i = 0
+    while i < limit and i < len(ids):
+        cat_id = ids[i]
         breadcrumbs = fetch_breadcrumb(cat_id)
         match breadcrumbs:
             case Err():
@@ -110,12 +113,12 @@ def complete_categories(ids: list[int]) -> Result[list[Category], str]:
                         return Err(err.error)
                     case Ok():
                         parent_id = parent_id.value
-                print(name, parent_id)
                 category = Category(
                     id=cat_id,
-                    type="goods", # not included in breadcrumbs or main category
+                    type="goods",  # not included in breadcrumbs or main category
                     name=name,
                     parent=parent_id,
                 )
                 result.append(category)
+        i += 1
     return Ok(result)
