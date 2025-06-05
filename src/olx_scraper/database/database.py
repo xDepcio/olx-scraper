@@ -77,8 +77,3 @@ def exec_many_query(
                 return err
             case _:
                 return Err(f"Unknown cursor object: {cursor}")
-
-
-def load_schema(pool, path, params):
-    script = open(path, "r").read()
-    return exec_query(pool, script, params, commit=True)
