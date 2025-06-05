@@ -1,7 +1,5 @@
 # category_endpoint = "https://www.olx.pl/api/v1/offers/metadata/search-categories/?offset=0&limit=40&category_id=1197&filter_refiners=spell_checker&facets=%5B%7B%22field%22%3A%22region%22%2C%22fetchLabel%22%3Atrue%2C%22fetchUrl%22%3Atrue%2C%22limit%22%3A30%7D%2C%7B%22field%22%3A%22category_without_exclusions%22%2C%22fetchLabel%22%3Atrue%2C%22fetchUrl%22%3Atrue%2C%22limit%22%3A100%7D%5D"
-from ctypes import HRESULT
 
-import requests
 from pydantic import BaseModel
 from requests import HTTPError, get
 from pydantic import BaseModel
@@ -27,18 +25,18 @@ def fetch_raw_category_ids() -> Result[list[int], str]:
         "category_id": 1197,
         "filter_refiners": "spell_checker",
         "facets": '[{"field":"region","fetchLabel":true,"fetchUrl":true,"limit":30},'
-                  '{"field":"category_without_exclusions","fetchLabel":true,"fetchUrl":true,"limit":100}]'
+        '{"field":"category_without_exclusions","fetchLabel":true,"fetchUrl":true,"limit":100}]',
     }
 
     try:
         response = get(search_url, params=params)
         response.raise_for_status()
-        raw_categories = get_dict_value(['data', 'categories'], response.json())
+        raw_categories = get_dict_value(["data", "categories"], response.json())
         match raw_categories:
             case Err() as err:
                 return Err(err.error)
             case Ok() as ok:
-                return Ok(list(map(lambda x: x['id'], ok.value)))
+                return Ok(list(map(lambda x: x["id"], ok.value)))
     except HTTPError as e:
         return Err(str(e))
     return Err("raw_categories is not a Result")
@@ -67,7 +65,9 @@ def fetch_breadcrumb(category_id: int) -> Result[list[dict[str, Any]], str]:
 
 def extract_category_name(breadcrumbs: list[dict[str, Any]]) -> Result[str, str]:
     if len(breadcrumbs) <= 1:
-        return Err(f"Breadcrums not long enough for category name, len of {len(breadcrumbs)}")
+        return Err(
+            f"Breadcrums not long enough for category name, len of {len(breadcrumbs)}"
+        )
     label = get_dict_value(["label"], breadcrumbs[-1])
 
     match label:
@@ -78,7 +78,9 @@ def extract_category_name(breadcrumbs: list[dict[str, Any]]) -> Result[str, str]
     return Err("Returned category name was not wrapped in Result")
 
 
-def extract_category_parent_id(breadcrumbs: list[dict[str, Any]]) -> Result[Optional[str], str]:
+def extract_category_parent_id(
+    breadcrumbs: list[dict[str, Any]],
+) -> Result[Optional[str], str]:
     if len(breadcrumbs) <= 2:
         return Ok(None)
     label = get_dict_value(["categoryId"], breadcrumbs[-2])

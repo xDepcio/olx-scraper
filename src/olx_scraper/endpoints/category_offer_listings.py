@@ -302,21 +302,36 @@ class CategoryOfferListings(BaseModel):
     class ListingSuccess(BaseModel):
         class Data(BaseModel):
             class Location(BaseModel):
+                class District(BaseModel):
+                    id: int
+                    name: str
+                    normalized_name: str | None
+
                 class City(BaseModel):
                     id: int
                     name: str
+                    normalized_name: str
 
                 class Region(BaseModel):
                     id: int
                     name: str
+                    normalized_name: str
 
+                district: District | None
                 city: City
                 region: Region
 
+            id: int
             location: Location
 
             last_refresh_time: str
             created_time: str
+
+            class Category(BaseModel):
+                id: int
+                type: str
+
+            category: Category
 
             class Photo(BaseModel):
                 link: str
@@ -384,6 +399,11 @@ class CategoryOfferListings(BaseModel):
                 type: str
                 value: ParamValueUnion = Field(..., discriminator="typename")
 
+            class Map(BaseModel):
+                lat: float
+                lon: float
+
+            map: Map
             params: list[Param]
             description: str
             external_url: Optional[str] = None
