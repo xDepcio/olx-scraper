@@ -43,7 +43,7 @@ def category(id: Annotated[int, typer.Argument(help="Category ID to scrape")]):
 
 
 @app.command()
-def update_categories(limit: Annotated[int, typer.Argument(help="Top N most popular categories")]):
+def update_categories(limit: Annotated[int, typer.Argument(help="Number of most popular categories to scrape and save")]):
     db_pool = ThreadedConnectionPool(
         minconn=1,
         maxconn=10,
