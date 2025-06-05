@@ -1,4 +1,5 @@
 # category_endpoint = "https://www.olx.pl/api/v1/offers/metadata/search-categories/?offset=0&limit=40&category_id=1197&filter_refiners=spell_checker&facets=%5B%7B%22field%22%3A%22region%22%2C%22fetchLabel%22%3Atrue%2C%22fetchUrl%22%3Atrue%2C%22limit%22%3A30%7D%2C%7B%22field%22%3A%22category_without_exclusions%22%2C%22fetchLabel%22%3Atrue%2C%22fetchUrl%22%3Atrue%2C%22limit%22%3A100%7D%5D"
+from ctypes import HRESULT
 
 import requests
 from pydantic import BaseModel
@@ -6,7 +7,7 @@ from requests import HTTPError, get
 from pydantic import BaseModel
 from requests import HTTPError, get
 from olx_scraper.result import Result, Ok, Err
-from olx_scraper.endpoints.category_offer_listings import validate_pydantic_model
+from olx_scraper.endpoints.category_offer_listings import get_dict_value
 from typing import Optional, Any
 
 
@@ -32,24 +33,26 @@ def fetch_raw_category_ids() -> Result[list[int], str]:
     try:
         response = get(search_url, params=params)
         response.raise_for_status()
-        raw_categories = response.json().get("data", {}).get("categories", [])
-        if not raw_categories:
-            print("raw empty")
-            return Err([])
+        raw_categories = get_dict_value(['data', 'categories'], response.json())
+        match raw_categories:
+            case Err() as err:
+                return Err(err.error)
+            case Ok() as ok:
+                return Ok(list(map(lambda x: x['id'], ok.value)))
     except HTTPError as e:
         return Err(str(e))
-    return Ok(list(map(lambda x: x['id'], raw_categories)))
-
+    return Err("raw_categories is not a Result")
 
 
 def fetch_olx_categories() -> Result[list[Category], str]:
-    raw_categories = fetch_raw_category_ids()
-    match raw_categories:
+    category_id_result = fetch_raw_category_ids()
+    match category_id_result:
         case Err() as err:
             return Err(err.error)
         case Ok() as ok:
             return complete_categories(ok.value)
     return Err([])
+
 
 def fetch_breadcrumb(category_id: int) -> Result[list[dict[str, Any]], str]:
     breadcrumbs_url = "https://www.olx.pl/api/v1/offers/metadata/breadcrumbs/"
@@ -61,33 +64,45 @@ def fetch_breadcrumb(category_id: int) -> Result[list[dict[str, Any]], str]:
         return Err(str(e))
     return Ok(breadcrumbs)
 
-def extract_category_name(breadcrumbs: list[dict[str, Any]]) -> str:
-    if len(breadcrumbs) >= 2:
-        return breadcrumbs[-1]["label"]
-    return ""
+
+def extract_category_name(breadcrumbs: list[dict[str, Any]]) -> Result[str, str]:
+    label = get_dict_value(["label"], breadcrumbs[-1])
+
+    match label:
+        case Ok() as ok:
+            if len(breadcrumbs) <= 1:
+                return Err(f"Breadcrums not long enough, received only {ok.value}")
+            return ok
+        case Err() as err:
+            return Err(err.error)
+    return Err("Returned category name was not wrapped in Result")
 
 def extract_category_parent_id(breadcrumbs: list[dict[str, Any]]) -> Optional[str]:
     if len(breadcrumbs) >= 3:
         return breadcrumbs[-2]["categoryId"]
     return None
 
+
 def complete_categories(ids: list[int]) -> Result[list[Category], str]:
     result: list[Category] = []
     for cat_id in ids[:15]:
         breadcrumbs = fetch_breadcrumb(cat_id)
         match breadcrumbs:
-            case Err() as err:
+            case Err():
                 print(f"Could not resolve breadcrumbs for category: {cat_id}")
                 continue
             case Ok() as ok:
+                name = extract_category_name(ok.value)
+                match name:
+                    case Err() as err:
+                        return Err(err.error)
+                    case Ok():
+                        name = name.value
                 category = Category(
                     id=cat_id,
                     type="goods",
-                    name=extract_category_name(ok.value),
+                    name=name,
                     parent=extract_category_parent_id(ok.value),
                 )
                 result.append(category)
     return Ok(result)
-
-
-
