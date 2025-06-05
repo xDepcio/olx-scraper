@@ -7,14 +7,14 @@ from pydantic import BaseModel
 from requests import HTTPError, get
 from olx_scraper.result import Result, Ok, Err
 from olx_scraper.endpoints.category_offer_listings import validate_pydantic_model
-from typing import Optional
+from typing import Optional, Any
 
 
 class Category(BaseModel):
     id: int
     type: str
     name: str
-    parent: Optional[str]
+    parent: Optional[int]
 
 
 def fetch_raw_category_ids() -> Result[list[int], str]:
@@ -51,25 +51,43 @@ def fetch_olx_categories() -> Result[list[Category], str]:
             return complete_categories(ok.value)
     return Err([])
 
-def complete_categories(ids: list[int]) -> Result[list[Category], str]:
+def fetch_breadcrumb(category_id: int) -> Result[list[dict[str, Any]], str]:
     breadcrumbs_url = "https://www.olx.pl/api/v1/offers/metadata/breadcrumbs/"
+    try:
+        breadcrumb_res = get(breadcrumbs_url, params={"category_id": category_id})
+        breadcrumb_res.raise_for_status()
+        breadcrumbs = breadcrumb_res.json().get("data", {}).get("breadcrumbs", [])
+    except HTTPError as e:
+        return Err(str(e))
+    return Ok(breadcrumbs)
+
+def extract_category_name(breadcrumbs: list[dict[str, Any]]) -> str:
+    if len(breadcrumbs) >= 2:
+        return breadcrumbs[-1]["label"]
+    return ""
+
+def extract_category_parent_id(breadcrumbs: list[dict[str, Any]]) -> Optional[str]:
+    if len(breadcrumbs) >= 3:
+        return breadcrumbs[-2]["categoryId"]
+    return None
+
+def complete_categories(ids: list[int]) -> Result[list[Category], str]:
     result: list[Category] = []
     for cat_id in ids[:15]:
-        try:
-            breadcrumb_res = get(breadcrumbs_url, params={"category_id": cat_id})
-            breadcrumb_res.raise_for_status()
-            breadcrumbs = breadcrumb_res.json().get("data", {}).get("breadcrumbs", [])
-        except HTTPError as e:
-            return Err(str(e))
-        name = breadcrumbs[-1]["label"] if len(breadcrumbs) >= 1 else ""
-        parent = breadcrumbs[-2]["label"] if len(breadcrumbs) >= 2 else None
-
-        category = Category(
-            id=cat_id,
-            type="goods",
-            name=name,
-            parent=parent,
-        )
-        result.append(category)
-    result: list[Category]
+        breadcrumbs = fetch_breadcrumb(cat_id)
+        match breadcrumbs:
+            case Err() as err:
+                print(f"Could not resolve breadcrumbs for category: {cat_id}")
+                continue
+            case Ok() as ok:
+                category = Category(
+                    id=cat_id,
+                    type="goods",
+                    name=extract_category_name(ok.value),
+                    parent=extract_category_parent_id(ok.value),
+                )
+                result.append(category)
     return Ok(result)
+
+
+
