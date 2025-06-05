@@ -66,21 +66,27 @@ def fetch_breadcrumb(category_id: int) -> Result[list[dict[str, Any]], str]:
 
 
 def extract_category_name(breadcrumbs: list[dict[str, Any]]) -> Result[str, str]:
+    if len(breadcrumbs) <= 1:
+        return Err(f"Breadcrums not long enough for category name, len of {len(breadcrumbs)}")
     label = get_dict_value(["label"], breadcrumbs[-1])
 
     match label:
         case Ok() as ok:
-            if len(breadcrumbs) <= 1:
-                return Err(f"Breadcrums not long enough, received only {ok.value}")
             return ok
         case Err() as err:
             return Err(err.error)
     return Err("Returned category name was not wrapped in Result")
 
-def extract_category_parent_id(breadcrumbs: list[dict[str, Any]]) -> Optional[str]:
-    if len(breadcrumbs) >= 3:
-        return breadcrumbs[-2]["categoryId"]
-    return None
+def extract_category_parent_id(breadcrumbs: list[dict[str, Any]]) -> Result[Optional[str], str]:
+    if len(breadcrumbs) <= 2:
+        return Ok(None)
+    label = get_dict_value(["categoryId"], breadcrumbs[-2])
+    match label:
+        case Ok() as ok:
+            return ok
+        case Err() as err:
+            return Err(err.error)
+    return Err("Returned category id was not wrapped in Result")
 
 
 def complete_categories(ids: list[int]) -> Result[list[Category], str]:
@@ -98,11 +104,18 @@ def complete_categories(ids: list[int]) -> Result[list[Category], str]:
                         return Err(err.error)
                     case Ok():
                         name = name.value
+                parent_id = extract_category_parent_id(ok.value)
+                match parent_id:
+                    case Err() as err:
+                        return Err(err.error)
+                    case Ok():
+                        parent_id = parent_id.value
+                print(name, parent_id)
                 category = Category(
                     id=cat_id,
                     type="goods",
                     name=name,
-                    parent=extract_category_parent_id(ok.value),
+                    parent=parent_id,
                 )
                 result.append(category)
     return Ok(result)
