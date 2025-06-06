@@ -5,6 +5,35 @@ from psycopg2.pool import AbstractConnectionPool
 from olx_scraper.result import Err, Ok, Result
 
 
+def pull_price_from_params(
+    params: list[CategoryOfferListings.ListingSuccess.Data.Param],
+) -> Result[tuple[float, str], Exception]:
+    for param in params:
+        match param.value:
+            case CategoryOfferListings.ListingSuccess.Data.Param.PriceParamValue() as v:
+                return Ok((v.value, v.currency))
+            case _:
+                pass
+
+    return Err(Exception("couldn't pull price from params:", params))
+
+
+def pull_condition_from_params(
+    params: list[CategoryOfferListings.ListingSuccess.Data.Param],
+) -> Result[str, Exception]:
+    for param in params:
+        match param.value:
+            case (
+                CategoryOfferListings.ListingSuccess.Data.Param.GenericParamValue() as v
+            ):
+                if param.key == "state":
+                    return Ok(v.key)
+            case _:
+                pass
+
+    return Err(Exception("couldn't pull condition from params:", params))
+
+
 class DistrictEmptyErr(Exception):
     pass
 
@@ -56,6 +85,19 @@ def insert_offer_into_db(
         RETURNING id;
     """
 
+    match pull_price_from_params(offer.params):
+        case Ok((price, currency)):
+            pass
+        case Err() as e:
+            return e
+
+    match pull_condition_from_params(offer.params):
+        case Ok(condition):
+            pass
+        case Err() as e:
+            condition = "unknown"
+            # return e
+
     match exec_query(
         pool,
         sql,
@@ -65,10 +107,10 @@ def insert_offer_into_db(
             offer.description,
             # offer.category.id,
             None,
-            "unknown",
-            123,
+            condition,
+            price,
             False,
-            "PLN",
+            currency,
             offer.map.lat,
             offer.map.lon,
             offer.url,
