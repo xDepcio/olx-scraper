@@ -62,7 +62,7 @@ def update_categories(
         port="5432",
         database="olx_scraper",
     )
-    add_categories(db_pool, 50)
+    add_categories(db_pool, limit)
 
 
 if __name__ == "__main__":
