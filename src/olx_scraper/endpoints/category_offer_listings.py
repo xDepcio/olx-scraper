@@ -1,7 +1,9 @@
 from typing import Any, Literal, Optional, Union
-from olx_scraper.result import Err, Ok, Result
+
+from olx_scraper.result import Err, Ok, Result as Res
 from gql import Client, gql
 from pydantic import BaseModel, Field
+from returns.result import Result, Success, Failure, safe
 
 
 OFFER_LISTINGS = """
@@ -442,27 +444,20 @@ def gql_vars_get_offer_listings(
     )
 
 
+@safe
 def execute_gql_query(
     client: Client, query: str, variables: dict[str, Any]
-) -> Result[dict[str, Any], str]:
-    try:
-        response = client.execute(gql(query), variable_values=variables)  # type: ignore
-        return Ok(response)
-    except Exception as e:
-        return Err(str(e))
+) -> dict[str, Any]:
+    response = client.execute(gql(query), variable_values=variables)  # type: ignore
+    return response
 
 
-def validate_pydantic_model[T: BaseModel](
-    model: type[T], data: dict[str, Any]
-) -> Result[T, str]:
-    try:
-        validated_model = model.model_validate(data)
-        return Ok(validated_model)
-    except Exception as e:
-        return Err(str(e))
+@safe
+def validate_pydantic_model[T: BaseModel](model: type[T], data: dict[str, Any]) -> T:
+    return model.model_validate(data)
 
 
-def get_dict_value(path: list[str], data: dict[str, Any]) -> Result[Any, str]:
+def get_dict_value(path: list[str], data: dict[str, Any]) -> Res[Any, str]:
     """Get a value from a nested dictionary using a list of keys."""
     new_d = data
     for key in path:
@@ -476,13 +471,8 @@ def get_dict_value(path: list[str], data: dict[str, Any]) -> Result[Any, str]:
     return Ok(new_d)  # type: ignore
 
 
-def fetch_category_offers(
-    client: Client, category_id: int, offset: int, limit: int
-) -> Result[CategoryOfferListings, str]:
+def fetch_category_offers(client: Client, category_id: int, offset: int, limit: int):
     query, variables = gql_vars_get_offer_listings(offset, limit, category_id)
-    res = execute_gql_query(client, query, variables)
-    match res:
-        case Err() as err:
-            return Err(err.error)
-        case Ok() as ok:
-            return validate_pydantic_model(CategoryOfferListings, ok.value)
+    return execute_gql_query(client, query, variables).bind(
+        lambda x: validate_pydantic_model(CategoryOfferListings, x)
+    )
