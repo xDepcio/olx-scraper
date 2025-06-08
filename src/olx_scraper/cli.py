@@ -49,9 +49,9 @@ def category(id: Annotated[int, typer.Argument(help="Category ID to scrape")]):
 
 @app.command()
 def update_categories(
-    limit: Annotated[
-        Optional[int], typer.Argument(help="Number of most popular categories to scrape and save")
-    ] = None,
+        limit: Annotated[
+            Optional[int], typer.Argument(help="Number of most popular categories to scrape and save")
+        ] = None,
 ):
     db_pool = ThreadedConnectionPool(
         minconn=1,
@@ -64,7 +64,7 @@ def update_categories(
     )
     print("Limit set at:", limit)
     result = add_categories(db_pool, limit)
-    print(result)
+
 
 if __name__ == "__main__":
     app()

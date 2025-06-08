@@ -36,15 +36,15 @@ def exec_multiple_queries(
 
 
 def check_if_exists(pool: AbstractConnectionPool, cat_id: int) -> Result[bool, str]:
-        select_query = make_select_query_from_category_id(cat_id)
-        res = exec_query(pool, select_query, [])
-        match res:
-            case Ok() as ok:
-                if len(ok.value) > 0:
-                    return Ok(True)
-                return Ok(False)
-            case _ as e:
-                return e
+    select_query = make_select_query_from_category_id(cat_id)
+    res = exec_query(pool, select_query, [])
+    match res:
+        case Ok() as ok:
+            if len(ok.value) > 0:
+                return Ok(True)
+            return Ok(False)
+        case _ as e:
+            return e
 
 
 def add_from_id(pool: AbstractConnectionPool, cat_id: int) -> Result[None, str]:
