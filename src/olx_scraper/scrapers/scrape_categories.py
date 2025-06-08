@@ -90,3 +90,13 @@ def add_categories(pool: AbstractConnectionPool, limit: Optional[int] = None) ->
                 print(f"Covered {covered} out of {amount}")
 
     return Ok(None)
+
+
+def get_all_available_categories(pool: AbstractConnectionPool) -> Result[list[int], str]:
+    query = "SELECT id FROM category;"
+    result = exec_query(pool, query, [])
+    match result:
+        case Ok() as ok:
+            return Ok(list(map(lambda x: x[0], ok.value)))
+        case _ as e:
+            return Err(str(e))
