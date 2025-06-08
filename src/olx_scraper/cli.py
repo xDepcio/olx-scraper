@@ -9,6 +9,7 @@ from olx_scraper.endpoints.category_offer_listings import CategoryOfferListings
 from olx_scraper.result import Err, Ok
 from olx_scraper.scrapers.scrape_by_category import scrape_category
 from olx_scraper.scrapers.scrape_categories import add_categories
+from returns.result import Result, Success, Failure
 
 GRAPHQL_ENDPOINT = "https://www.olx.pl/apigateway/graphql"
 app = typer.Typer()
@@ -38,10 +39,10 @@ def category(id: Annotated[int, typer.Argument(help="Category ID to scrape")]):
     def on_listings_fetched(listings: list[CategoryOfferListings.ListingSuccess.Data]):
         for listing in listings:
             match insert_offer_into_db(listing, db_pool):
-                case Ok() as ok:
-                    print("ok:", ok)
-                case Err() as err:
-                    print("err:", err)
+                case Success() as ok:
+                    print("success:", ok)
+                case Failure() as err:
+                    print("failure:", err)
 
     scrape_res = scrape_category(client, id, on_listings_fetched)
     print(scrape_res)

@@ -2,7 +2,8 @@ from olx_scraper.database.database import exec_many_query, exec_query
 from olx_scraper.endpoints.category_offer_listings import CategoryOfferListings
 from psycopg2.pool import AbstractConnectionPool
 
-from olx_scraper.result import Err, Ok, Result
+from olx_scraper.result import Err, Ok, Result as Res
+from returns.result import Result, Success, Failure, safe
 
 
 def pull_price_from_params(
@@ -11,11 +12,11 @@ def pull_price_from_params(
     for param in params:
         match param.value:
             case CategoryOfferListings.ListingSuccess.Data.Param.PriceParamValue() as v:
-                return Ok((v.value, v.currency))
+                return Success((v.value, v.currency))
             case _:
                 pass
 
-    return Err(Exception("couldn't pull price from params:", params))
+    return Failure(Exception("couldn't pull price from params:", params))
 
 
 def pull_condition_from_params(
@@ -27,11 +28,11 @@ def pull_condition_from_params(
                 CategoryOfferListings.ListingSuccess.Data.Param.GenericParamValue() as v
             ):
                 if param.key == "state":
-                    return Ok(v.key)
+                    return Success(v.key)
             case _:
                 pass
 
-    return Err(Exception("couldn't pull condition from params:", params))
+    return Failure(Exception("couldn't pull condition from params:", params))
 
 
 class DistrictEmptyErr(Exception):
@@ -43,23 +44,23 @@ def insert_offer_into_db(
 ) -> Result[int, Exception]:
 
     match insert_region(offer.location, pool):
-        case Err() as e:
+        case Failure() as e:
             return e
-        case Ok(region_id):
+        case Success(region_id):
             pass
 
     match insert_city_into_db(offer.location, pool):
-        case Err() as e:
+        case Failure() as e:
             return e
-        case Ok(city_id):
+        case Success(city_id):
             pass
 
     match insert_district(offer.location, pool):
-        case Err(DistrictEmptyErr()):
+        case Failure(DistrictEmptyErr()):
             district_id = None
-        case Err() as e:
+        case Failure() as e:
             return e
-        case Ok(district_id):
+        case Success(district_id):
             pass
 
     sql = """
@@ -86,30 +87,29 @@ def insert_offer_into_db(
     """
 
     match pull_price_from_params(offer.params):
-        case Ok((price, currency)):
+        case Success((price, currency)):
             pass
-        case Err() as e:
+        case Failure() as e:
             return e
 
     match pull_condition_from_params(offer.params):
-        case Ok(condition):
+        case Success(condition):
             pass
-        case Err() as e:
+        case Failure() as e:
             condition = "unknown"
             # return e
 
-    match exec_query(
+    return exec_query(
         pool,
-        sql,
+        query=sql,
         params=[
             offer.id,
             offer.title,
             offer.description,
-            # offer.category.id,
-            None,
+            None,  # category_id is not provided in the data
             condition,
             price,
-            False,
+            False,  # is_free is not provided in the data
             currency,
             offer.map.lat,
             offer.map.lon,
@@ -118,17 +118,7 @@ def insert_offer_into_db(
             city_id,
             region_id,
         ],
-    ):
-        case Ok(val):
-            match insert_photos(offer, pool):
-                case Err() as e:
-                    return e
-                case _:
-                    pass
-            return Ok(val[0][0])
-
-        case Err() as e:
-            return e
+    ).bind(lambda val: insert_photos(offer, pool).bind(lambda _: Success(val[0][0])))
 
 
 def insert_city_into_db(
@@ -144,7 +134,7 @@ def insert_city_into_db(
             region_id = EXCLUDED.region_id
         RETURNING id;
     """
-    match exec_query(
+    return exec_query(
         pool,
         query=sql,
         params=[
@@ -153,11 +143,7 @@ def insert_city_into_db(
             location.city.normalized_name,
             location.region.id,
         ],
-    ):
-        case Ok(val):
-            return Ok(val[0][0])
-        case Err() as e:
-            return e
+    ).bind(lambda val: Success(val[0][0]))
 
 
 def insert_region(
@@ -172,7 +158,7 @@ def insert_region(
             normalized_name = EXCLUDED.normalized_name
         RETURNING id;
     """
-    match exec_query(
+    return exec_query(
         pool,
         query=sql,
         params=[
@@ -180,11 +166,7 @@ def insert_region(
             location.region.name,
             location.region.normalized_name,
         ],
-    ):
-        case Ok(val):
-            return Ok(val[0][0])
-        case Err() as e:
-            return e
+    ).bind(lambda val: Success(val[0][0]))
 
 
 def insert_district(
@@ -192,7 +174,7 @@ def insert_district(
     pool: AbstractConnectionPool,
 ) -> Result[int, Exception]:
     if not location.district:
-        return Err(DistrictEmptyErr())
+        return Failure(DistrictEmptyErr())
 
     sql = """
         INSERT INTO district (id, name, normalized_name, city_id)
@@ -203,7 +185,7 @@ def insert_district(
             city_id = EXCLUDED.city_id
         RETURNING id;
     """
-    match exec_query(
+    return exec_query(
         pool,
         query=sql,
         params=[
@@ -212,11 +194,7 @@ def insert_district(
             location.district.normalized_name,
             location.city.id,
         ],
-    ):
-        case Ok(val):
-            return Ok(val[0][0])
-        case Err() as e:
-            return Err(Exception(e.error))
+    ).bind(lambda val: Success(val[0][0]))
 
 
 def insert_photos(
