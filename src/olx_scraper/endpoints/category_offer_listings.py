@@ -448,22 +448,13 @@ def gql_vars_get_offer_listings(
 def execute_gql_query(
     client: Client, query: str, variables: dict[str, Any]
 ) -> dict[str, Any]:
-    # try:
     response = client.execute(gql(query), variable_values=variables)  # type: ignore
     return response
 
 
-# except Exception as e:
-# return Err(str(e))
-
-
 @safe
 def validate_pydantic_model[T: BaseModel](model: type[T], data: dict[str, Any]) -> T:
-    # try:
     return model.model_validate(data)
-    #     return Success(validated_model)
-    # except Exception as e:
-    #     return Failure(Exception(str(e)))
 
 
 def get_dict_value(path: list[str], data: dict[str, Any]) -> Res[Any, str]:
@@ -485,8 +476,3 @@ def fetch_category_offers(client: Client, category_id: int, offset: int, limit: 
     return execute_gql_query(client, query, variables).bind(
         lambda x: validate_pydantic_model(CategoryOfferListings, x)
     )
-    # match res:
-    #     case Err() as err:
-    #         return Err(err.error)
-    #     case Ok() as ok:
-    #         return validate_pydantic_model(CategoryOfferListings, ok.value)
