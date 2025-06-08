@@ -1,4 +1,4 @@
-from typing import Annotated
+from typing import Annotated, Optional
 import typer
 from gql.transport.aiohttp import AIOHTTPTransport
 from gql import Client
@@ -50,7 +50,7 @@ def category(id: Annotated[int, typer.Argument(help="Category ID to scrape")]):
 @app.command()
 def update_categories(
     limit: Annotated[
-        int, typer.Argument(help="Number of most popular categories to scrape and save")
+        Optional[int], typer.Argument(help="Number of most popular categories to scrape and save", default=None)
     ],
 ):
     db_pool = ThreadedConnectionPool(

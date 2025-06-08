@@ -48,7 +48,7 @@ def fetch_olx_categories(limit: int) -> Result[list[Category], str]:
         case Err() as err:
             return Err(err.error)
         case Ok() as ok:
-            return complete_categories(ok.value, limit)
+            return ok.value
     return Err([])
 
 
@@ -92,35 +92,29 @@ def extract_category_parent_id(
     return Err("Returned category id was not wrapped in Result")
 
 
-def complete_categories(ids: list[int], limit: int) -> Result[list[Category], str]:
-    result: list[Category] = []
-    i = 0
-    while i < limit and i < len(ids):
-        cat_id = ids[i]
-        breadcrumbs = fetch_breadcrumb(cat_id)
-        match breadcrumbs:
-            case Err():
-                print(f"Could not resolve breadcrumbs for category: {cat_id}")
-                continue
-            case Ok() as ok:
-                name = extract_category_name(ok.value)
-                match name:
-                    case Err() as err:
-                        return Err(err.error)
-                    case Ok():
-                        name = name.value
-                parent_id = extract_category_parent_id(ok.value)
-                match parent_id:
-                    case Err() as err:
-                        return Err(err.error)
-                    case Ok():
-                        parent_id = parent_id.value
-                category = Category(
-                    id=cat_id,
-                    type="goods",  # not included in breadcrumbs or main category
-                    name=name,
-                    parent=parent_id,
-                )
-                result.append(category)
-        i += 1
-    return Ok(result)
+def complete_category(cat_id: int) -> Result[Category, str]:
+    breadcrumbs = fetch_breadcrumb(cat_id)
+    match breadcrumbs:
+        case Err():
+            Err(f"Could not resolve breadcrumbs for category: {cat_id}")
+        case Ok() as ok:
+            name = extract_category_name(ok.value)
+            match name:
+                case Err() as err:
+                    return Err(err.error)
+                case Ok():
+                    name = name.value
+            parent_id = extract_category_parent_id(ok.value)
+            match parent_id:
+                case Err() as err:
+                    return Err(err.error)
+                case Ok():
+                    parent_id = parent_id.value
+            category = Category(
+                id=cat_id,
+                type="goods",  # not included in breadcrumbs or main category
+                name=name,
+                parent=parent_id,
+            )
+            return Ok(category)
+    return Err("Breadcrumbs didn't match class Result")
