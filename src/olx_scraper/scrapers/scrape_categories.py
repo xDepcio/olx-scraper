@@ -18,7 +18,7 @@ def make_insert_query_from_category(c: Category) -> str:
 
 def make_select_query_from_category_id(cat_id) -> str:
     query = (
-        f"SELECT * FROM category where id = {cat_id})"
+        f"SELECT * FROM category where id = {cat_id}"
     )
     return query
 
@@ -41,16 +41,20 @@ def check_if_exists(pool: AbstractConnectionPool, cat_id: int) -> Result[bool, s
         match res:
             case Ok() as ok:
                 if len(ok.value) > 0:
-                    return Ok(False)
-                return Ok(True)
+                    return Ok(True)
+                return Ok(False)
             case _ as e:
                 return e
 
 
 def add_from_id(pool: AbstractConnectionPool, cat_id: int) -> Result[None, str]:
-    if check_if_exists(pool, cat_id):
-        return Ok(None)
-
+    exists = check_if_exists(pool, cat_id)
+    match exists:
+        case Err() as e:
+            return e
+        case Ok() as ok:
+            if ok.value:
+                return Ok(None)
     complete = complete_category(cat_id)
     match complete:
         case Ok():
@@ -76,9 +80,13 @@ def add_categories(pool: AbstractConnectionPool, limit: Optional[int] = None) ->
             return err
         case Ok() as ok:
             covered = 0
+            amount = len(ok.value)
             for cat_id in ok.value:
-                add_from_id(pool, cat_id)
-                if limit is not None and covered > limit:
+                if limit is not None and covered >= limit:
                     break
+
+                add_from_id(pool, cat_id)
+                covered += 1
+                print(f"Covered {covered} out of {amount}")
 
     return Ok(None)
