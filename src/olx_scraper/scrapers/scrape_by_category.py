@@ -4,7 +4,8 @@ from olx_scraper.endpoints.category_offer_listings import (
     CategoryOfferListings,
     fetch_category_offers,
 )
-from olx_scraper.result import Err, Ok, Result
+from olx_scraper.result import Err, Ok, Result as Res
+from returns.result import Result, Success, Failure, safe
 
 
 def scrape_category(
@@ -13,7 +14,7 @@ def scrape_category(
     on_listings_fetched: Callable[
         [list[CategoryOfferListings.ListingSuccess.Data]], None
     ] = lambda x: None,
-) -> Result[None | CategoryOfferListings.ListingError, str]:
+) -> Result[None | CategoryOfferListings.ListingError, Exception]:
     """Scrape offers from a specific category."""
 
     finish = False
@@ -22,8 +23,8 @@ def scrape_category(
     while not finish:
         res = fetch_category_offers(client, category_id, offset, limit)
         match res:
-            case Ok(
-                value=CategoryOfferListings(
+            case Success(
+                CategoryOfferListings(
                     clientCompatibleListings=CategoryOfferListings.ListingSuccess() as listings
                 )
             ):
@@ -31,13 +32,13 @@ def scrape_category(
                 offset += limit
                 if len(listings.data) == 0:
                     finish = True
-            case Ok(
-                value=CategoryOfferListings(
+            case Success(
+                CategoryOfferListings(
                     clientCompatibleListings=CategoryOfferListings.ListingError() as gql_error
                 )
             ):
-                return Ok(gql_error)
-            case _ as res:
-                return Err(f"Unexpected value: {res}")
+                return Success(gql_error)
+            case _:
+                return Failure(Exception(f"Unexpected value: {res}"))
 
-    return Ok(None)
+    return Success(None)

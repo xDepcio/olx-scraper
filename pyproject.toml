@@ -9,7 +9,9 @@ dependencies = [
     "typer>=0.16.0",
     "psycopg2-binary>=2.9.10",
     "requests>=2.32.3",
-    "returns>=0.25.0",
+    "returns[compatible-mypy]>=0.25.0",
+    "mypy>=1.15.0",
+    "requests-toolbelt>=1.0.0",
 ]
 requires-python = ">=3.13"
 readme = "README.md"
@@ -26,3 +28,6 @@ distribution = true
 [tool.ariadne-codegen]
 # schema_path = "schema.graphql"     # Or an introspection URL
 queries_path = "schema.graphql" # Or a list of query files
+
+[tool.mypy]
+plugins = ["returns.contrib.mypy.returns_plugin"]

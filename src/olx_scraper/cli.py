@@ -1,6 +1,5 @@
 from typing import Annotated
 import typer
-from gql.transport.aiohttp import AIOHTTPTransport
 from gql.transport.requests import RequestsHTTPTransport
 from gql import Client
 
