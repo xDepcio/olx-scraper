@@ -1,6 +1,7 @@
 from typing import Annotated
 import typer
 from gql.transport.aiohttp import AIOHTTPTransport
+from gql.transport.requests import RequestsHTTPTransport
 from gql import Client
 
 from psycopg2.pool import ThreadedConnectionPool
@@ -22,7 +23,7 @@ def auto_pilot():
 @app.command()
 def category(id: Annotated[int, typer.Argument(help="Category ID to scrape")]):
     """Scrape a specific category by its ID."""
-    transport = AIOHTTPTransport(url=GRAPHQL_ENDPOINT, ssl=False)
+    transport = RequestsHTTPTransport(url=GRAPHQL_ENDPOINT)
     client = Client(transport=transport, fetch_schema_from_transport=False)
 
     db_pool = ThreadedConnectionPool(
