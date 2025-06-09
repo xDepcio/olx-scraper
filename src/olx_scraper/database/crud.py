@@ -5,6 +5,8 @@ from psycopg2.pool import AbstractConnectionPool
 from olx_scraper.result import Err, Ok, Result as Res
 from returns.result import Result, Success, Failure, safe
 
+from olx_scraper.scrapers.scrape_categories import scrape_category_data
+
 # from olx_scraper.scrapers.scrape_categories import add_from_id
 
 
@@ -101,7 +103,9 @@ def insert_offer_into_db(
             condition = "unknown"
             # return e
 
-    # add_from_id(pool, offer.category.id)
+    match scrape_category_data(pool, offer.category.id):
+        case Failure() as e:
+            return e
 
     return exec_query(
         pool,
@@ -110,7 +114,7 @@ def insert_offer_into_db(
             offer.id,
             offer.title,
             offer.description,
-            None,  # category_id is not provided in the data
+            offer.category.id,
             condition,
             price,
             False,  # is_free is not provided in the data
