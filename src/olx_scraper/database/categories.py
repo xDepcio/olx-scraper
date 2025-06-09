@@ -26,3 +26,12 @@ def insert_category(
         query=query,
         params=[category.categoryId, "goods", category.label, parent_id],
     ).bind(lambda x: Success(None))
+
+
+def category_exists(
+    pool: AbstractConnectionPool, category_id: int
+) -> Res[bool, Exception]:
+    query = "SELECT EXISTS(SELECT 1 FROM category WHERE id = %s);"
+    return exec_query(pool, query=query, params=[category_id]).bind(
+        lambda val: Success(val[0][0])
+    )

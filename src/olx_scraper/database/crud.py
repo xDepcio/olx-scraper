@@ -1,3 +1,4 @@
+from olx_scraper.database.categories import category_exists
 from olx_scraper.database.database import exec_many_query, exec_query
 from olx_scraper.endpoints.category_offer_listings import CategoryOfferListings
 from psycopg2.pool import AbstractConnectionPool
@@ -99,7 +100,11 @@ def insert_offer_into_db(
             condition = "unknown"
             # return e
 
-    match scrape_category_data(pool, offer.category.id):
+    match category_exists(pool, offer.category.id):
+        case Success(False):
+            match scrape_category_data(pool, offer.category.id):
+                case Failure() as e:
+                    return e
         case Failure() as e:
             return e
 
