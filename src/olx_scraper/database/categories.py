@@ -35,3 +35,12 @@ def category_exists(
     return exec_query(pool, query=query, params=[category_id]).bind(
         lambda val: Success(val[0][0])
     )
+
+
+def get_all_categories_ids(
+    pool: AbstractConnectionPool,
+) -> Res[list[int], Exception]:
+    query = "SELECT id FROM category;"
+    return exec_query(pool, query=query, params=[]).bind(
+        lambda val: Success([row[0] for row in val])
+    )
