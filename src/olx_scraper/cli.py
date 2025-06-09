@@ -8,10 +8,6 @@ from gql.transport.requests import RequestsHTTPTransport
 from psycopg2.pool import ThreadedConnectionPool
 from olx_scraper.database.crud import insert_offer_into_db
 from olx_scraper.endpoints.category_offer_listings import CategoryOfferListings
-from olx_scraper.endpoints.fetch_categories import (
-    add_categories_w_limit,
-    scrape_category_data,
-)
 from olx_scraper.result import Err, Ok
 from olx_scraper.scrapers.scrape_by_category import scrape_category
 
@@ -20,6 +16,8 @@ from olx_scraper.scrapers.scrape_by_category import scrape_category
 #     get_all_available_categories,
 # )
 from returns.result import Result, Success, Failure
+
+from olx_scraper.scrapers.scrape_categories import add_categories_w_limit
 
 GRAPHQL_ENDPOINT = "https://www.olx.pl/apigateway/graphql"
 app = typer.Typer()
