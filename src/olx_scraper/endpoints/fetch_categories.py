@@ -1,21 +1,12 @@
 # category_endpoint = "https://www.olx.pl/api/v1/offers/metadata/search-categories/?offset=0&limit=40&category_id=1197&filter_refiners=spell_checker&facets=%5B%7B%22field%22%3A%22region%22%2C%22fetchLabel%22%3Atrue%2C%22fetchUrl%22%3Atrue%2C%22limit%22%3A30%7D%2C%7B%22field%22%3A%22category_without_exclusions%22%2C%22fetchLabel%22%3Atrue%2C%22fetchUrl%22%3Atrue%2C%22limit%22%3A100%7D%5D"
 
-import itertools
-import pprint
-import sys
 from pydantic import BaseModel, ValidationError
 from requests import HTTPError, JSONDecodeError, get
 from pydantic import BaseModel
 from requests import HTTPError, get
-from olx_scraper.database.database import exec_query
 
-from olx_scraper.result import Result, Ok, Err
-from olx_scraper.endpoints.category_offer_listings import get_dict_value
-from typing import Optional, Any
-from psycopg2.pool import AbstractConnectionPool
-from returns.result import Result as Res, Success, Failure, safe
-from returns.pointfree import bind
-from returns.pipeline import flow
+from typing import Optional
+from returns.result import safe
 
 
 class AllCategoriesResponse(BaseModel):
@@ -69,24 +60,3 @@ def fetch_breadcrumb(category_id: int) -> BreadCrumbsResponseEntry:
     breadcrumb_res = get(breadcrumbs_url, params={"category_id": category_id})
     breadcrumb_res.raise_for_status()
     return BreadCrumbsResponseEntry.model_validate(breadcrumb_res.json())
-
-
-def insert_category(
-    pool: AbstractConnectionPool,
-    category: CategoryData,
-    parent_id: Optional[int] = None,
-) -> Res[None, Exception]:
-    query = """
-        INSERT INTO category (id, type, name, parent_id)
-        VALUES (%s, %s, %s, %s)
-        ON CONFLICT (id) DO UPDATE SET
-            type = EXCLUDED.type,
-            name = EXCLUDED.name,
-            parent_id = EXCLUDED.parent_id
-        RETURNING id;
-    """
-    return exec_query(
-        pool,
-        query=query,
-        params=[category.categoryId, "goods", category.label, parent_id],
-    ).bind(lambda x: Success(None))

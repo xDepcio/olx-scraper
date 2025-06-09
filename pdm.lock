@@ -5,7 +5,7 @@
 groups = ["default"]
 strategy = ["inherit_metadata"]
 lock_version = "4.5.0"
-content_hash = "sha256:05f11ee1c8dfcd9be75c6dddf896c8521f7a1b5f44aace188d39010185f69dd4"
+content_hash = "sha256:8247b34ffc5c4bb4d17d71c738f73b9fabe06de2023f43118db7c06d7df874ec"
 
 [[metadata.targets]]
 requires_python = ">=3.13"
@@ -496,6 +496,31 @@ dependencies = [
 files = [
     {file = "typer-0.16.0-py3-none-any.whl", hash = "sha256:1f79bed11d4d02d4310e3c1b7ba594183bcedb0ac73b27a9e5f28f6fb5b98855"},
     {file = "typer-0.16.0.tar.gz", hash = "sha256:af377ffaee1dbe37ae9440cb4e8f11686ea5ce4e9bae01b84ae7c63b87f1dd3b"},
+]
+
+[[package]]
+name = "types-psycopg2"
+version = "2.9.21.20250516"
+requires_python = ">=3.9"
+summary = "Typing stubs for psycopg2"
+groups = ["default"]
+files = [
+    {file = "types_psycopg2-2.9.21.20250516-py3-none-any.whl", hash = "sha256:2a9212d1e5e507017b31486ce8147634d06b85d652769d7a2d91d53cb4edbd41"},
+    {file = "types_psycopg2-2.9.21.20250516.tar.gz", hash = "sha256:6721018279175cce10b9582202e2a2b4a0da667857ccf82a97691bdb5ecd610f"},
+]
+
+[[package]]
+name = "types-requests"
+version = "2.32.0.20250602"
+requires_python = ">=3.9"
+summary = "Typing stubs for requests"
+groups = ["default"]
+dependencies = [
+    "urllib3>=2",
+]
+files = [
+    {file = "types_requests-2.32.0.20250602-py3-none-any.whl", hash = "sha256:f4f335f87779b47ce10b8b8597b409130299f6971ead27fead4fe7ba6ea3e726"},
+    {file = "types_requests-2.32.0.20250602.tar.gz", hash = "sha256:ee603aeefec42051195ae62ca7667cd909a2f8128fdf8aad9e8a5219ecfab3bf"},
 ]
 
 [[package]]

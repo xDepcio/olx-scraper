@@ -2,10 +2,10 @@ from typing import Optional
 from psycopg2.pool import AbstractConnectionPool
 from returns.result import Result as Res, Success, Failure
 
+from olx_scraper.database.categories import insert_category
 from olx_scraper.endpoints.fetch_categories import (
     fetch_breadcrumb,
     fetch_raw_category_ids,
-    insert_category,
 )
 
 
