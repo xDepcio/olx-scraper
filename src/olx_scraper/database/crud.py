@@ -5,6 +5,8 @@ from psycopg2.pool import AbstractConnectionPool
 from olx_scraper.result import Err, Ok, Result as Res
 from returns.result import Result, Success, Failure, safe
 
+# from olx_scraper.scrapers.scrape_categories import add_from_id
+
 
 def pull_price_from_params(
     params: list[CategoryOfferListings.ListingSuccess.Data.Param],
@@ -98,6 +100,8 @@ def insert_offer_into_db(
         case Failure() as e:
             condition = "unknown"
             # return e
+
+    # add_from_id(pool, offer.category.id)
 
     return exec_query(
         pool,
