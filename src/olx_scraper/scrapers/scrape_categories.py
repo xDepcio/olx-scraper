@@ -3,8 +3,12 @@ from typing import Optional
 from psycopg2.pool import AbstractConnectionPool
 
 from olx_scraper.database.database import exec_query
-from olx_scraper.endpoints.fetch_categories import Category, fetch_olx_categories, fetch_raw_category_ids, \
-    complete_category
+from olx_scraper.endpoints.fetch_categories import (
+    Category,
+    fetch_olx_categories,
+    fetch_raw_category_ids,
+    complete_category,
+)
 from olx_scraper.result import Result, Err, Ok
 
 
@@ -17,14 +21,12 @@ def make_insert_query_from_category(c: Category) -> str:
 
 
 def make_select_query_from_category_id(cat_id) -> str:
-    query = (
-        f"SELECT * FROM category where id = {cat_id}"
-    )
+    query = f"SELECT * FROM category where id = {cat_id}"
     return query
 
 
 def exec_multiple_queries(
-        pool: AbstractConnectionPool, queries: list[Result[str, str]]
+    pool: AbstractConnectionPool, queries: list[Result[str, str]]
 ) -> Result[None, str]:
     for query in queries:
         match query:
@@ -73,7 +75,9 @@ def add_from_id(pool: AbstractConnectionPool, cat_id: int) -> Result[None, str]:
             return Err(str(e))
 
 
-def add_categories(pool: AbstractConnectionPool, limit: Optional[int] = None) -> Result[None, str]:
+def add_categories(
+    pool: AbstractConnectionPool, limit: Optional[int] = None
+) -> Result[None, str]:
     categories: Result[list[int], str] = fetch_raw_category_ids()
     match categories:
         case Err() as err:
@@ -92,7 +96,9 @@ def add_categories(pool: AbstractConnectionPool, limit: Optional[int] = None) ->
     return Ok(None)
 
 
-def get_all_available_categories(pool: AbstractConnectionPool) -> Result[list[int], str]:
+def get_all_available_categories(
+    pool: AbstractConnectionPool,
+) -> Result[list[int], str]:
     query = "SELECT id FROM category;"
     result = exec_query(pool, query, [])
     match result:
