@@ -3,7 +3,7 @@ from typing import Any, Literal, Optional, Union
 from olx_scraper.result import Err, Ok, Result as Res
 from gql import Client, gql
 from pydantic import BaseModel, Field
-from returns.result import Result, Success, Failure, safe
+from returns.result import safe
 
 
 OFFER_LISTINGS = """

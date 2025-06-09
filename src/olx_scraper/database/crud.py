@@ -1,13 +1,9 @@
 from olx_scraper.database.database import exec_many_query, exec_query
 from olx_scraper.endpoints.category_offer_listings import CategoryOfferListings
 from psycopg2.pool import AbstractConnectionPool
-
 from olx_scraper.result import Err, Ok, Result as Res
 from returns.result import Result, Success, Failure, safe
-
 from olx_scraper.scrapers.scrape_categories import scrape_category_data
-
-# from olx_scraper.scrapers.scrape_categories import add_from_id
 
 
 def pull_price_from_params(

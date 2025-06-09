@@ -1,10 +1,9 @@
 from contextlib import contextmanager
 from typing import Any, Generator
 
-from olx_scraper.result import Err, Ok, Result as Res
 from psycopg2.extensions import connection, cursor
 from psycopg2.pool import AbstractConnectionPool
-from returns.result import Result, Success, Failure, safe
+from returns.result import Result, Success, Failure
 
 
 @contextmanager

@@ -4,7 +4,6 @@ from olx_scraper.endpoints.category_offer_listings import (
     CategoryOfferListings,
     fetch_category_offers,
 )
-from olx_scraper.result import Err, Ok, Result as Res
 from returns.result import Result, Success, Failure, safe
 
 
