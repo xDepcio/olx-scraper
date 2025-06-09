@@ -33,7 +33,6 @@ def scrape_category_data(
                 ):
                     case Failure() as err:
                         return err
-                print(f"Inserted category cat: {cat}, parent: {parent}")
         case Failure() as err:
             return err
 
